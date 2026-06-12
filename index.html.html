@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Diagnostic de Maturité Digitale — Restaurant MissMum</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --bg-card-solid: #111827;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent: #c9a96e;
+            --accent-light: rgba(201, 169, 110, 0.12);
+            --accent-glow: rgba(201, 169, 110, 0.25);
+            --border: rgba(255, 255, 255, 0.06);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+            --radius: 24px;
+            --radius-sm: 16px;
+            --transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient glowing background shapes */
+        .bg-shapes {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+        }
+        .bg-shapes::before {
+            content: ''; position: absolute; top: -10%; right: -5%; width: 500px; height: 500px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            border-radius: 50%; animation: float 18s ease-in-out infinite;
+        }
+        .bg-shapes::after {
+            content: ''; position: absolute; bottom: -5%; left: -5%; width: 450px; height: 450px;
+            background: radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%);
+            border-radius: 50%; animation: float 22s ease-in-out infinite reverse;
+        }
+        @keyframes float {
+            0%,100% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(20px,-20px) scale(1.04); }
+            66% { transform: translate(-15px,15px) scale(0.96); }
+        }
+
+        .container { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; padding: 12px 16px 60px; }
+
+        .header { text-align: center; padding: 32px 0 24px; }
+        .header-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--accent-light); border: 1px solid rgba(201,169,110,0.2);
+            padding: 6px 16px; border-radius: 50px; font-size: 11px; font-weight: 500;
+            letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent);
+            margin-bottom: 16px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+        .header-badge::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.8); } }
+        
+        .header h1 {
+            font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 600; line-height: 1.2;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, #a1a8b9 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .header p { font-size: 14px; color: var(--text-secondary); line-height: 1.5; max-width: 420px; margin: 0 auto; font-weight: 300; }
+
+        .progress-container { position: sticky; top: 0; z-index: 100; padding: 12px 0; background: linear-gradient(to bottom, var(--bg) 60%, transparent); }
+        .progress-bar { height: 4px; background: rgba(201,169,110,0.1); border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #d4b87a); border-radius: 2px; transition: width 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+        .progress-text { text-align: center; font-size: 11px; color: var(--text-secondary); margin-top: 6px; font-weight: 500; letter-spacing: 0.5px; }
+
+        .section {
+            background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;
+            margin-bottom: 16px; box-shadow: var(--shadow); opacity: 0; transform: translateY(30px);
+            animation: fadeUp 0.6s ease forwards; transition: var(--transition);
+        }
+        .section:hover { box-shadow: var(--shadow-lg); border-color: rgba(201,169,110,0.15); }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+        .section-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+        .section-number { flex-shrink: 0; width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), #d4b87a); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; color: #111827; box-shadow: 0 4px 12px var(--accent-glow); }
+        .section-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; line-height: 1.3; }
+        .section-subtitle { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
+
+        .field { margin-bottom: 18px; }
+        .field:last-child { margin-bottom: 0; }
+        .field-label { display: block; font-size: 13.5px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px; line-height: 1.4; }
+        .field-label .required { color: #f87171; margin-left: 2px; }
+        .field-hint { font-size: 11.5px; color: var(--text-secondary); margin-top: -4px; margin-bottom: 8px; font-weight: 300; }
+
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%; padding: 12px 16px; font-family: 'Outfit', sans-serif; font-size: 14px;
+            color: var(--text-primary); background: rgba(31, 41, 55, 0.5); border: 1.5px solid rgba(255,255,255,0.06);
+            border-radius: var(--radius-sm); outline: none; transition: var(--transition);
+            -webkit-appearance: none; appearance: none;
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent); background: rgba(17, 24, 39, 0.8); box-shadow: 0 0 0 3px var(--accent-glow); }
+        textarea { min-height: 90px; resize: vertical; line-height: 1.4; }
+        select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 44px; }
+
+        .options-grid { display: grid; gap: 8px; }
+        .options-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 480px) { .options-grid.cols-2 { grid-template-columns: 1fr; } }
+
+        .option-card { position: relative; cursor: pointer; }
+        .option-card input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .option-label { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: rgba(31, 41, 55, 0.4); border: 1.5px solid rgba(255,255,255,0.04); border-radius: var(--radius-sm); transition: var(--transition); font-size: 13.5px; color: var(--text-secondary); }
+        .option-card:hover .option-label { background: rgba(55, 65, 81, 0.4); border-color: rgba(201, 169, 110, 0.2); }
+        .option-card input:checked + .option-label { background: var(--accent-light); border-color: var(--accent); color: var(--text-primary); font-weight: 500; box-shadow: 0 2px 10px var(--accent-glow); }
+        .option-check { width: 18px; height: 18px; border: 1.5px solid var(--text-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: var(--transition); }
+        .option-card input:checked + .option-label .option-check { background: var(--accent); border-color: var(--accent); }
+        .option-card input:checked + .option-label .option-check::after { content: ''; width: 6px; height: 6px; background: #111827; border-radius: 50%; }
+        .option-card input[type="checkbox"] + .option-label .option-check { border-radius: 4px; }
+        .option-card input[type="checkbox"]:checked + .option-label .option-check::after { border-radius: 1px; width: 8px; height: 5px; background: none; border-left: 2px solid #111827; border-bottom: 2px solid #111827; transform: rotate(-45deg) translate(1px,-0.5px); }
+
+        .range-container { padding: 6px 0; }
+        .range-value { text-align: center; font-size: 28px; font-weight: 600; color: var(--accent); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+        .range-value .unit { font-size: 13px; font-weight: 400; color: var(--text-secondary); margin-left: 4px; }
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 5px; background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--value,0%), rgba(255,255,255,0.08) var(--value,0%), rgba(255,255,255,0.08) 100%); border-radius: 3px; outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: linear-gradient(135deg, var(--accent), #d4b87a); border-radius: 50%; cursor: pointer; box-shadow: 0 2px 10px var(--accent-glow), 0 0 0 4px #111827; transition: var(--transition); }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); box-shadow: 0 4px 15px var(--accent-glow), 0 0 0 4px #111827; }
+        .range-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); margin-top: 6px; font-weight: 400; }
+
+        .submit-container { position: sticky; bottom: 0; padding: 16px 0 0; background: linear-gradient(to top, var(--bg) 80%, transparent); z-index: 50; }
+        .submit-btn {
+            width: 100%; padding: 16px 24px; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600;
+            color: #111827; background: linear-gradient(135deg, var(--accent), #b8956a); border: none;
+            border-radius: var(--radius-sm); cursor: pointer; box-shadow: 0 8px 24px var(--accent-glow);
+            transition: var(--transition); position: relative; overflow: hidden; letter-spacing: 0.5px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .submit-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent); transition: 0.6s; }
+        .submit-btn:hover::before { left: 100%; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(201,169,110,0.35); }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .footer { text-align: center; padding: 24px 0 16px; font-size: 11.5px; color: var(--text-secondary); font-weight: 300; }
+        .footer span { color: var(--accent); font-weight: 500; }
+
+        .section:nth-child(1) { animation-delay: 0.05s; }
+        .section:nth-child(2) { animation-delay: 0.1s; }
+        .section:nth-child(3) { animation-delay: 0.15s; }
+        .section:nth-child(4) { animation-delay: 0.2s; }
+        .section:nth-child(5) { animation-delay: 0.25s; }
+        .section:nth-child(6) { animation-delay: 0.3s; }
+        .section:nth-child(7) { animation-delay: 0.35s; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(201,169,110,0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(201,169,110,0.4); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(11,15,25,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 16px; opacity: 0; transition: opacity 0.4s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-card { background: var(--bg-card-solid); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 24px; text-align: center; max-width: 520px; width: 100%; box-shadow: var(--shadow-lg); transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); max-height: 90vh; overflow-y: auto; }
+        .modal-overlay.active .modal-card { transform: scale(1); }
+        .modal-icon { width: 56px; height: 56px; background: linear-gradient(135deg, var(--accent), #d4b87a); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 24px; box-shadow: 0 8px 20px var(--accent-glow); color: #111827; }
+        .modal-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; margin-bottom: 10px; color: var(--text-primary); }
+        .modal-text { font-size: 14.5px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px; }
+        
+        .modal-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, var(--accent), #b8956a); color: #111827; border: none; border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; text-decoration: none; box-shadow: 0 4px 12px var(--accent-glow); transition: var(--transition); }
+        .modal-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(201,169,110,0.35); }
+        .modal-btn-secondary { background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); }
+        .modal-btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+        /* Custom AI Diagnostic styling */
+        .ai-report { text-align: left; background: rgba(31, 41, 55, 0.3); border-radius: var(--radius-sm); padding: 18px; border: 1.5px dashed rgba(201,169,110,0.3); margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        .ai-report h3 { font-family: 'Playfair Display', serif; color: var(--accent); font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .score-badge { display: inline-block; padding: 4px 10px; background: var(--accent-light); border: 1.5px solid var(--accent); color: var(--accent); font-size: 12px; font-weight: 700; border-radius: 8px; margin-bottom: 12px; }
+
+        /* Custom Toast Notification styling */
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1f2937; border: 1px solid var(--accent); color: var(--text-primary); padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-lg); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000; pointer-events: none; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="bg-shapes"></div>
+    <div class="container">
+        
+        <header class="header">
+            <div class="header-badge">Diagnostic de maturité digitale</div>
+            <h1>Restaurant MissMum</h1>
+            <p>Tonton, répondons à ces questions pour identifier comment automatiser tes processus, simplifier ton administration et booster ton resto à Mons !</p>
+        </header>
+
+        <div class="progress-container">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-text" id="progressText">Section 1 sur 7</div>
+        </div>
+
+        <form id="auditForm">
+            <!-- SECTION 1 -->
+            <div class="section" data-section="1">
+                <div class="section-header">
+                    <div class="section-number"><i data-lucide="store" class="w-4 h-4"></i></div>
+                    <div><div class="section-title">Ton restaurant</div><div class="section-subtitle">Le contexte de ton établissement</div></div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Depuis combien de temps ton restaurant est-il ouvert ? <span class="required">*</span></label>
+                    <input type="text" name="s1_ouverture" placeholder="Ex: 8 mois, 2 ans, en création..." required>
+                </div>
+                <div class="field">
+                    <label class="field-label">Combien de personnes travaillent avec toi régulièrement ? <span class="required">*</span></label>
+                    <input type="number" name="s1_equipe" placeholder="Ex: 3" min="0" required>
+                </div>
+                <div class="field">
+                    <label class="field-label">Le restaurant est-il ouvert tous les jours de la semaine ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s1_ouverture_jours" value="Oui, tous les jours" required><span class="option-label"><span class="option-check"></span>Oui, tous les jours</span></label>
+                        <label class="option-card"><input type="radio" name="s1_ouverture_jours" value="Non, certains jours de fermeture"><span class="option-label"><span class="option-check"></span>Non, avec fermetures</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Si non, précise tes jours habituels de fermeture :</label>
+                    <input type="text" name="s1_jours_fermes" placeholder="Ex: Lundi et mardi">
+                </div>
+            </div>
+
+            <!-- SECTION 2 -->
+            <div class="section" data-section="2">
+                <div class="section-header">
+                    <div class="section-number"><i data-lucide="clock" class="w-4 h-4"></i></div>
+                    <div><div class="section-title">Tes corvées administratives</div><div class="section-subtitle">Ce qui te prend le plus de temps et d'énergie</div></div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Quelle tâche administrative ou numérique te prend le plus de temps chaque semaine ? <span class="required">*</span></label>
+                    <div class="field-hint">Saisie des factures fournisseurs, gestion du planning, classement papier, relances, etc.</div>
+                    <textarea name="s2_tache_plus_longue" placeholder="Décris en quelques mots la tâche qui t'épuise le plus..." required></textarea>
+                </div>
+                <div class="field">
+                    <label class="field-label">Si tu pouvais faire disparaître UNE SEULE corvée à tout jamais, ce serait laquelle ? <span class="required">*</span></label>
+                    <textarea name="s2_corvee_disparaitre" placeholder="Celle qui te stresse ou t'agace le plus..." required></textarea>
+                </div>
+                <div class="field">
+                    <label class="field-label">Combien d'heures par semaine consacres-tu à la paperasse ? <span class="required">*</span></label>
+                    <div class="range-container">
+                        <div class="range-value"><span id="val_s2_heures">5</span><span class="unit">heures / semaine</span></div>
+                        <input type="range" name="s2_heures_paperasse" min="0" max="25" value="5" id="range_s2_heures" oninput="updateRange(this,'val_s2_heures','heures / semaine')">
+                        <div class="range-labels"><span>0h</span><span>12h</span><span>25h et +</span></div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">À quel moment gères-tu cette paperasse administrative ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s2_moment_paperasse" value="Matin avant ouverture" required><span class="option-label"><span class="option-check"></span>Matin avant ouverture</span></label>
+                        <label class="option-card"><input type="radio" name="s2_moment_paperasse" value="Pendant les coupures de service"><span class="option-label"><span class="option-check"></span>Pendant les coupures</span></label>
+                        <label class="option-card"><input type="radio" name="s2_moment_paperasse" value="Soir après le service de nuit"><span class="option-label"><span class="option-check"></span>Soir après service</span></label>
+                        <label class="option-card"><input type="radio" name="s2_moment_paperasse" value="Le week-end sur mon temps perso"><span class="option-label"><span class="option-check"></span>Le week-end (repos)</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Sur une échelle de 1 à 10, à quel point cette paperasse te stresse ou t'agace ? <span class="required">*</span></label>
+                    <div class="range-container">
+                        <div class="range-value"><span id="val_s2_stress">5</span><span class="unit">/ 10</span></div>
+                        <input type="range" name="s2_stress_paperasse" min="1" max="10" value="5" id="range_s2_stress" oninput="updateRange(this,'val_s2_stress','/ 10')">
+                        <div class="range-labels"><span>Tout à fait gérable</span><span>Moyennement</span><span>Insupportable</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3 -->
+            <div class="section" data-section="3">
+                <div class="section-header">
+                    <div class="section-number"><i data-lucide="smartphone" class="w-4 h-4"></i></div>
+                    <div><div class="section-title">Ton rapport au numérique</div><div class="section-subtitle">Pour adapter nos futurs outils à tes habitudes</div></div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Pour quoi utilises-tu principalement ton smartphone ? <span class="required">*</span></label>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="checkbox" name="s3_smartphone" value="Appels / SMS"><span class="option-label"><span class="option-check"></span>Appeler et envoyer des SMS</span></label>
+                        <label class="option-card"><input type="checkbox" name="s3_smartphone" value="WhatsApp"><span class="option-label"><span class="option-check"></span>Échanger sur WhatsApp</span></label>
+                        <label class="option-card"><input type="checkbox" name="s3_smartphone" value="Photos"><span class="option-label"><span class="option-check"></span>Prendre des photos</span></label>
+                        <label class="option-card"><input type="checkbox" name="s3_smartphone" value="Facebook-Instagram"><span class="option-label"><span class="option-check"></span>Suivre les réseaux (Facebook, Insta)</span></label>
+                        <label class="option-card"><input type="checkbox" name="s3_smartphone" value="Outils Pro (Maps, GPS)"><span class="option-label"><span class="option-check"></span>Outils pratiques (GPS, Maps)</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">As-tu déjà utilisé une application métier pour ton restaurant ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s3_app_restaurant" value="Oui, j'en utilise ou ai utilisé" required><span class="option-label"><span class="option-check"></span>Oui, j'en utilise</span></label>
+                        <label class="option-card"><input type="radio" name="s3_app_restaurant" value="Non, aucune"><span class="option-label"><span class="option-check"></span>Non, jamais utilisé</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Si oui, écris le nom de l'application (ex: caisse, réservations) :</label>
+                    <input type="text" name="s3_app_nom" placeholder="Ex: Lightspeed, Trivec, Zettle, Excel...">
+                </div>
+                <div class="field">
+                    <label class="field-label">Quand on te parle d'automatisation ou d'Intelligence Artificielle (IA) : <span class="required">*</span></label>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="s3_reaction_ia" value="Curieux & Intéressé" required><span class="option-label"><span class="option-check"></span>Je suis curieux et intéressé</span></label>
+                        <label class="option-card"><input type="radio" name="s3_reaction_ia" value="Méfiant / Sceptique"><span class="option-label"><span class="option-check"></span>Je reste un peu sceptique</span></label>
+                        <label class="option-card"><input type="radio" name="s3_reaction_ia" value="Un peu perdu"><span class="option-label"><span class="option-check"></span>Je me sens perdu face à ça</span></label>
+                        <label class="option-card"><input type="radio" name="s3_reaction_ia" value="Pas d'intérêt particulier"><span class="option-label"><span class="option-check"></span>Cela ne m'intéresse pas</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Si je te dis "envoie une photo de ta facture par WhatsApp et elle se classe toute seule" : <span class="required">*</span></label>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="s3_reaction_scanner" value="Chaud pour essayer !" required><span class="option-label"><span class="option-check"></span>"Montre-moi ça tout de suite !"</span></label>
+                        <label class="option-card"><input type="radio" name="s3_reaction_scanner" value="Trop beau pour être vrai / Complicateur"><span class="option-label"><span class="option-check"></span>"Ça me paraît trop compliqué"</span></label>
+                        <label class="option-card"><input type="radio" name="s3_reaction_scanner" value="Je préfère le format papier traditionnel"><span class="option-label"><span class="option-check"></span>"Je préfère mon organisation papier"</span></label>
+                        <label class="option-card"><input type="radio" name="s3_reaction_scanner" value="Inquiet du coût par mois"><span class="option-label"><span class="option-check"></span>"Ça va me coûter combien par mois ?"</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">À quel point es-tu prêt à tester un nouvel outil s'il te fait gagner du temps ? <span class="required">*</span></label>
+                    <div class="range-container">
+                        <div class="range-value"><span id="val_s3_pret">5</span><span class="unit">/ 10</span></div>
+                        <input type="range" name="s3_pret_tester" min="1" max="10" value="5" id="range_s3_pret" oninput="updateRange(this,'val_s3_pret','/ 10')">
+                        <div class="range-labels"><span>Pas du tout</span><span>Moyennement</span><span>Dès demain !</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4 -->
+            <div class="section" data-section="4">
+                <div class="section-header">
+                    <div class="section-number"><i data-lucide="git-merge" class="w-4 h-4"></i></div>
+                    <div><div class="section-title">Tes canaux digitaux actuels</div><div class="section-subtitle">Comment circulent les données de ton activité</div></div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Comment transmets-tu tes documents financiers à ton comptable ? <span class="required">*</span></label>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="s4_comptable" value="Déplacement physique avec les fardes" required><span class="option-label"><span class="option-check"></span>Je me déplace lui déposer les fardes</span></label>
+                        <label class="option-card"><input type="radio" name="s4_comptable" value="Envoi de photos par WhatsApp"><span class="option-label"><span class="option-check"></span>Envoi de photos par WhatsApp</span></label>
+                        <label class="option-card"><input type="radio" name="s4_comptable" value="Par Email"><span class="option-label"><span class="option-check"></span>Par e-mail</span></label>
+                        <label class="option-card"><input type="radio" name="s4_comptable" value="Application comptable dédiée"><span class="option-label"><span class="option-check"></span>Via une application dédiée</span></label>
+                        <label class="option-card"><input type="radio" name="s4_comptable" value="Le comptable vient récupérer sur place"><span class="option-label"><span class="option-check"></span>Il vient les chercher sur place</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Ton comptable te réclame-t-il souvent des justificatifs manquants ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s4_comptable_reclame" value="Oui, très souvent" required><span class="option-label"><span class="option-check"></span>Oui, très souvent</span></label>
+                        <label class="option-card"><input type="radio" name="s4_comptable_reclame" value="De temps en temps"><span class="option-label"><span class="option-check"></span>De temps en temps</span></label>
+                        <label class="option-card"><input type="radio" name="s4_comptable_reclame" value="Rarement"><span class="option-label"><span class="option-check"></span>Rarement, c'est propre</span></label>
+                        <label class="option-card"><input type="radio" name="s4_comptable_reclame" value="Jamais"><span class="option-label"><span class="option-check"></span>Jamais</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Comment reçois-tu généralement les factures de tes fournisseurs ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="checkbox" name="s4_fournisseurs" value="Format papier lors de la livraison"><span class="option-label"><span class="option-check"></span>Papier à la livraison</span></label>
+                        <label class="option-card"><input type="checkbox" name="s4_fournisseurs" value="Reçues par e-mail"><span class="option-label"><span class="option-check"></span>Reçues par e-mail</span></label>
+                        <label class="option-card"><input type="checkbox" name="s4_fournisseurs" value="WhatsApp / SMS"><span class="option-label"><span class="option-check"></span>WhatsApp / SMS</span></label>
+                        <label class="option-card"><input type="checkbox" name="s4_fournisseurs" value="Doit télécharger sur un portail fournisseur"><span class="option-label"><span class="option-check"></span>Télécharger en ligne</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Disposes-tu d'un ordinateur ou d'une tablette utilisable au restaurant ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s4_ordinateur" value="Oui, ordinateur" required><span class="option-label"><span class="option-check"></span>Oui, un ordinateur</span></label>
+                        <label class="option-card"><input type="radio" name="s4_ordinateur" value="Oui, tablette"><span class="option-label"><span class="option-check"></span>Oui, une tablette</span></label>
+                        <label class="option-card"><input type="radio" name="s4_ordinateur" value="Les deux"><span class="option-label"><span class="option-check"></span>Les deux</span></label>
+                        <label class="option-card"><input type="radio" name="s4_ordinateur" value="Non, aucun équipement"><span class="option-label"><span class="option-check"></span>Non, uniquement mon GSM</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Quelles pages sur le web ton restaurant possède-t-il actuellement ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="checkbox" name="s4_reseaux" value="Facebook"><span class="option-label"><span class="option-check"></span>Page Facebook</span></label>
+                        <label class="option-card"><input type="checkbox" name="s4_reseaux" value="Instagram"><span class="option-label"><span class="option-check"></span>Page Instagram</span></label>
+                        <label class="option-card"><input type="checkbox" name="s4_reseaux" value="Google Business Profile"><span class="option-label"><span class="option-check"></span>Fiche Google Maps</span></label>
+                        <label class="option-card"><input type="checkbox" name="s4_reseaux" value="Aucune présence web"><span class="option-label"><span class="option-check"></span>Aucune présence</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Qui s'occupe de répondre aux avis clients ou de poster sur les réseaux ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s4_gere_reseaux" value="Moi-même" required><span class="option-label"><span class="option-check"></span>Moi-même</span></label>
+                        <label class="option-card"><input type="radio" name="s4_gere_reseaux" value="Un membre de l'équipe"><span class="option-label"><span class="option-check"></span>Un membre de l'équipe</span></label>
+                        <label class="option-card"><input type="radio" name="s4_gere_reseaux" value="Un proche / membre de la famille"><span class="option-label"><span class="option-check"></span>Un de mes proches</span></label>
+                        <label class="option-card"><input type="radio" name="s4_gere_reseaux" value="Personne ne gère"><span class="option-label"><span class="option-check"></span>Personne ne gère</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 5 -->
+            <div class="section" data-section="5">
+                <div class="section-header">
+                    <div class="section-number"><i data-lucide="shield-alert" class="w-4 h-4"></i></div>
+                    <div><div class="section-title">Normes AFSCA & Conformité</div><div class="section-subtitle">Garantir la traçabilité sans perdre de temps</div></div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Si l'AFSCA te demande la provenance d'un lot reçu il y a 2 mois, en combien de temps peux-tu retrouver la facture ? <span class="required">*</span></label>
+                    <div class="range-container">
+                        <div class="range-value"><span id="val_s5_afsca">15</span><span class="unit">minutes</span></div>
+                        <input type="range" name="s5_temps_afsca" min="0" max="60" value="15" id="range_s5_afsca" oninput="updateRange(this,'val_s5_afsca','minutes')">
+                        <div class="range-labels"><span>Immédiat (1 min)</span><span>30 minutes</span><span>Impossible / Très long</span></div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">As-tu déjà fait l'objet d'un contrôle officiel (inspection, hygiène...) ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s5_controle" value="Oui, contrôle AFSCA" required><span class="option-label"><span class="option-check"></span>Oui, par l'AFSCA</span></label>
+                        <label class="option-card"><input type="radio" name="s5_controle" value="Oui, inspection sociale/travail"><span class="option-label"><span class="option-check"></span>Inspection du travail</span></label>
+                        <label class="option-card"><input type="radio" name="s5_controle" value="Oui, police/nuisances"><span class="option-label"><span class="option-check"></span>Police des nuisances</span></label>
+                        <label class="option-card"><input type="radio" name="s5_controle" value="Non, aucun contrôle"><span class="option-label"><span class="option-check"></span>Non, jamais contrôlé</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Si un contrôle a eu lieu, quel a été son résultat ?</label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s5_resultat" value="Conforme sans suite"><span class="option-label"><span class="option-check"></span>Conforme sans suite</span></label>
+                        <label class="option-card"><input type="radio" name="s5_resultat" value="Remarques mineures / Mise en demeure"><span class="option-label"><span class="option-check"></span>Mise en demeure</span></label>
+                        <label class="option-card"><input type="radio" name="s5_resultat" value="Amende administrative"><span class="option-label"><span class="option-check"></span>Amende administrative</span></label>
+                        <label class="option-card"><input type="radio" name="s5_resultat" value="Fermeture administrative temporaire"><span class="option-label"><span class="option-check"></span>Fermeture temporaire</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Comment ranges-tu tes factures d'achats fournisseurs actuellement ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s5_rangement" value="Classeur à fardes physique" required><span class="option-label"><span class="option-check"></span>Dans des classeurs physiques</span></label>
+                        <label class="option-card"><input type="radio" name="s5_rangement" value="Boîte en vrac (méthode boîte à chaussures)"><span class="option-label"><span class="option-check"></span>En vrac dans une boîte</span></label>
+                        <label class="option-card"><input type="radio" name="s5_rangement" value="Sauvegardées en photos sur mon téléphone"><span class="option-label"><span class="option-check"></span>Photos sur mon GSM</span></label>
+                        <label class="option-card"><input type="radio" name="s5_rangement" value="Classées sur mon ordinateur"><span class="option-label"><span class="option-check"></span>Sur mon ordinateur</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">As-tu une sauvegarde de sécurité de tes fichiers pro (vol, incendie, panne) ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s5_sauvegarde" value="Oui, sauvegarde active (Cloud/Disque externe)" required><span class="option-label"><span class="option-check"></span>Oui, tout est sauvegardé</span></label>
+                        <label class="option-card"><input type="radio" name="s5_sauvegarde" value="Non, aucun backup actif"><span class="option-label"><span class="option-check"></span>Non, pas de sauvegarde</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 6 -->
+            <div class="section" data-section="6">
+                <div class="section-header">
+                    <div class="section-number"><i data-lucide="award" class="w-4 h-4"></i></div>
+                    <div><div class="section-title">Réputation & Concurrence locale</div><div class="section-subtitle">Garder ton image au top à Mons</div></div>
+                </div>
+                <div class="field">
+                    <label class="field-label">As-tu déjà reçu un avis négatif sur ta fiche Google Business ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s6_avis_negatif" value="Oui" required><span class="option-label"><span class="option-check"></span>Oui, cela m'est arrivé</span></label>
+                        <label class="option-card"><input type="radio" name="s6_avis_negatif" value="Non, jamais de mauvais avis"><span class="option-label"><span class="option-check"></span>Non, aucun problème</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Si oui, comment as-tu réagi ou répondu à cet avis ?</label>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="s6_reaction_avis" value="J'ai répondu de manière polie"><span class="option-label"><span class="option-check"></span>J'ai répondu calmement</span></label>
+                        <label class="option-card"><input type="radio" name="s6_reaction_avis" value="J'ai ignoré l'avis"><span class="option-label"><span class="option-check"></span>J'ai préféré l'ignorer</span></label>
+                        <label class="option-card"><input type="radio" name="s6_reaction_avis" value="J'ai demandé la suppression à Google"><span class="option-label"><span class="option-check"></span>Demander la suppression</span></label>
+                        <label class="option-card"><input type="radio" name="s6_reaction_avis" value="Je ne savais pas comment gérer"><span class="option-label"><span class="option-check"></span>Je ne savais pas quoi faire</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Connais-tu le nom de tes 3 principaux concurrents directs à Mons ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s6_concurrents" value="Oui, concurrents bien identifiés" required><span class="option-label"><span class="option-check"></span>Oui, je les connais bien</span></label>
+                        <label class="option-card"><input type="radio" name="s6_concurrents" value="Non, pas précisément"><span class="option-label"><span class="option-check"></span>Non, pas précisément</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Si oui, lesquels (noms ou types de cuisine) ?</label>
+                    <input type="text" name="s6_concurrents_noms" placeholder="Ex: Le Petit Congo, Saveurs d'Afrique...">
+                </div>
+                <div class="field">
+                    <label class="field-label">As-tu déjà eu des réclamations avec le voisinage (bruit, odeurs, plaintes) ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s6_voisins" value="Oui, plaintes ou soucis d'odeurs" required><span class="option-label"><span class="option-check"></span>Oui, quelques soucis</span></label>
+                        <label class="option-card"><input type="radio" name="s6_voisins" value="Non, entente parfaite"><span class="option-label"><span class="option-check"></span>Non, entente parfaite</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Est-ce que des clients te mentionnent qu'ils t'ont découvert sur Internet ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s6_trouve_internet" value="Oui, très fréquemment" required><span class="option-label"><span class="option-check"></span>Oui, très fréquemment</span></label>
+                        <label class="option-card"><input type="radio" name="s6_trouve_internet" value="De temps en temps"><span class="option-label"><span class="option-check"></span>De temps en temps</span></label>
+                        <label class="option-card"><input type="radio" name="s6_trouve_internet" value="Plutôt rarement"><span class="option-label"><span class="option-check"></span>Plutôt rarement</span></label>
+                        <label class="option-card"><input type="radio" name="s6_trouve_internet" value="Jamais ou je ne demande pas"><span class="option-label"><span class="option-check"></span>Jamais / Je ne sais pas</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 7 -->
+            <div class="section" data-section="7">
+                <div class="section-header">
+                    <div class="section-number"><i data-lucide="help-circle" class="w-4 h-4"></i></div>
+                    <div><div class="section-title">Ce que tu attends du numérique</div><div class="section-subtitle">Tes envies, tes craintes et ton budget de fonctionnement</div></div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Si un outil magique pouvait régler UN SEUL gros problème dans ton restaurant, ce serait quoi ? <span class="required">*</span></label>
+                    <textarea name="s7_reve_numerique" placeholder="Décris ton souhait le plus cher pour te simplifier le quotidien..." required></textarea>
+                </div>
+                <div class="field">
+                    <label class="field-label">Qu'est-ce qui te ferait dire qu'un nouvel outil numérique en vaut vraiment la peine ? <span class="required">*</span></label>
+                    <textarea name="s7_critere_succes" placeholder="Quels résultats attendus pour être convaincu..." required></textarea>
+                </div>
+                <div class="field">
+                    <label class="field-label">Pour quelle raison pourrais-tu abandonner un outil informatique au bout d'une semaine ? <span class="required">*</span></label>
+                    <textarea name="s7_frein_abandon" placeholder="Ex: Trop lent, trop complexe, demande d'allumer un ordi à chaque fois..." required></textarea>
+                </div>
+                <div class="field">
+                    <label class="field-label">Combien de temps es-tu prêt à consacrer chaque jour pour apprendre à utiliser un nouvel outil ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s7_temps_apprentissage" value="Moins de 5 minutes" required><span class="option-label"><span class="option-check"></span>Moins de 5 minutes</span></label>
+                        <label class="option-card"><input type="radio" name="s7_temps_apprentissage" value="Environ 15 minutes"><span class="option-label"><span class="option-check"></span>Environ 15 minutes</span></label>
+                        <label class="option-card"><input type="radio" name="s7_temps_apprentissage" value="Jusqu'à 30 minutes"><span class="option-label"><span class="option-check"></span>Jusqu'à 30 minutes</span></label>
+                        <label class="option-card"><input type="radio" name="s7_temps_apprentissage" value="Plus de 30 minutes"><span class="option-label"><span class="option-check"></span>Plus de 30 minutes</span></label>
+                        <label class="option-card"><input type="radio" name="s7_temps_apprentissage" value="Aucun temps disponible"><span class="option-label"><span class="option-check"></span>Aucun temps disponible</span></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Quel budget mensuel maximal pourrais-tu accorder à des outils rentables ? <span class="required">*</span></label>
+                    <div class="options-grid cols-2">
+                        <label class="option-card"><input type="radio" name="s7_budget" value="0€ (uniquement gratuit)" required><span class="option-label"><span class="option-check"></span>0€ (uniquement gratuit)</span></label>
+                        <label class="option-card"><input type="radio" name="s7_budget" value="De 5€ à 10€ par mois"><span class="option-label"><span class="option-check"></span>De 5€ à 10€ par mois</span></label>
+                        <label class="option-card"><input type="radio" name="s7_budget" value="De 10€ à 20€ par mois"><span class="option-label"><span class="option-check"></span>De 10€ à 20€ par mois</span></label>
+                        <label class="option-card"><input type="radio" name="s7_budget" value="De 20€ à 50€ par mois"><span class="option-label"><span class="option-check"></span>De 20€ à 50€ par mois</span></label>
+                        <label class="option-card"><input type="radio" name="s7_budget" value="Plus de 50€ si gros gain de temps"><span class="option-label"><span class="option-check"></span>Plus si gros gain de temps</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="submit-container">
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span>Lancer le diagnostic IA de MissMum</span>
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="footer">Formulaire confidentiel de MissMum — Développé avec soin par <span>LAmido✨</span></div>
+        </form>
+    </div>
+
+    <!-- Modal Overlay of success with live AI report -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-card">
+            <div id="modalLoadingState" class="py-6 flex flex-col items-center justify-center space-y-4">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+                <div class="text-center">
+                    <h3 class="font-bold text-lg text-white">Analyse de ton resto par Gemini...</h3>
+                    <p class="text-xs text-gray-400 max-w-xs mx-auto mt-1">Notre Intelligence Artificielle évalue ton potentiel digital d'après tes réponses.</p>
+                </div>
+            </div>
+
+            <div id="modalReportState" class="hidden text-center">
+                <div class="modal-icon"><i data-lucide="check" class="w-6 h-6 stroke-[#111827]"></i></div>
+                <div class="modal-title">Diagnostic Prêt !</div>
+                <p class="modal-text text-xs">Tonton, ton rapport personnalisé de MissMum est disponible. Découvre la synthèse ci-dessous :</p>
+                
+                <!-- Live AI Report Block -->
+                <div class="ai-report text-left" id="aiReportContent">
+                    <!-- Loaded dynamically via Gemini API -->
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <a href="#" class="modal-btn w-full justify-center" id="modalEmailBtn">
+                        <i data-lucide="mail" class="w-4 h-4"></i> Envoyer ce diagnostic par Email
+                    </a>
+                    
+                    <button type="button" class="modal-btn modal-btn-secondary w-full justify-center" id="modalCopyBtn" onclick="copyResultsToClipboard()">
+                        <i data-lucide="copy" class="w-4 h-4" id="copyBtnIcon"></i> <span id="copyBtnText">Copier pour m'envoyer sur WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification structure -->
+    <div class="toast" id="toastNotification">
+        <i data-lucide="check-circle" class="w-4 h-4 text-[#c9a96e]"></i>
+        <span id="toastMessage">Texte copié !</span>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Holds calculated formatted data
+        let formattedDataBody = "";
+        let generatedAiReportText = "";
+
+        // Dynamically style range inputs
+        function updateRange(input, valueId, unit) {
+            const val = input.value;
+            document.getElementById(valueId).textContent = val;
+            const percent = ((val - input.min) / (input.max - input.min)) * 100;
+            input.style.setProperty('--value', percent + '%');
+        }
+
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            const percent = ((input.value - input.min) / (input.max - input.min)) * 100;
+            input.style.setProperty('--value', percent + '%');
+        });
+
+        // Tracks current visible section based on scroll progression
+        function updateProgress() {
+            const sections = document.querySelectorAll('.section');
+            const viewportCenter = window.innerHeight / 2;
+            let currentSection = 1;
+            
+            sections.forEach((section, index) => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= viewportCenter) {
+                    currentSection = index + 1;
+                }
+            });
+            
+            const progress = (currentSection / sections.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = 'Section ' + currentSection + ' sur ' + sections.length;
+        }
+
+        window.addEventListener('scroll', updateProgress, { passive: true });
+        updateProgress();
+
+        // Custom notification toast
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Call Gemini API with Exponential Backoff
+        async function fetchGeminiReport(prompt, systemInstruction) {
+            const apiKey = ""; // Left as empty string to be auto-filled by Canvas at runtime
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                }
+            };
+
+            let delay = 1000;
+            const maxRetries = 4;
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 429) {
+                        // Throttled, perform exponential backoff
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`API error with status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || null;
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+            return null;
+        }
+
+        document.getElementById('auditForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Check HTML5 validation manually
+            if (!this.checkValidity()) {
+                showToast("Tonton, vérifie s'il te plaît que toutes les questions obligatoires (*) sont remplies !");
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span>Traitement par l\'IA en cours...</span> <i class="animate-spin" data-lucide="loader"></i>';
+            lucide.createIcons();
+
+            const formData = new FormData(this);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                if (data[key]) {
+                    if (Array.isArray(data[key])) {
+                        data[key].push(value);
+                    } else {
+                        data[key] = [data[key], value];
+                    }
+                } else {
+                    data[key] = value;
+                }
+            }
+
+            // Generate clean human-readable text block for backup
+            let rawDataSummary = "==========================================\n";
+            rawDataSummary += "📋 RÉPONSES BRUTES - DIAGNOSTIC MISS MUM\n";
+            rawDataSummary += "==========================================\n\n";
+
+            const sectionsMapping = [
+                { title: "[1. CONTEXTE DU RESTAURANT]", keys: ["s1_ouverture", "s1_equipe", "s1_ouverture_jours", "s1_jours_fermes"] },
+                { title: "[2. CORVÉES ADMINISTRATIVES]", keys: ["s2_tache_plus_longue", "s2_corvee_disparaitre", "s2_heures_paperasse", "s2_moment_paperasse", "s2_stress_paperasse"] },
+                { title: "[3. RAPPORT AU NUMÉRIQUE]", keys: ["s3_smartphone", "s3_app_restaurant", "s3_app_nom", "s3_reaction_ia", "s3_reaction_scanner", "s3_pret_tester"] },
+                { title: "[4. CANAUX DIGITAUX ACTUELS]", keys: ["s4_comptable", "s4_comptable_reclame", "s4_fournisseurs", "s4_ordinateur", "s4_reseaux", "s4_gere_reseaux"] },
+                { title: "[5. TRAÇABILITÉ & NORMES AFSCA]", keys: ["s5_temps_afsca", "s5_controle", "s5_resultat", "s5_rangement", "s5_sauvegarde"] },
+                { title: "[6. REPUTATION & CONCURRENCE LOCALE]", keys: ["s6_avis_negatif", "s6_reaction_avis", "s6_concurrents", "s6_concurrents_noms", "s6_voisins", "s6_trouve_internet"] },
+                { title: "[7. ATTENTES DE L'AUTOMATISATION]", keys: ["s7_reve_numerique", "s7_critere_succes", "s7_frein_abandon", "s7_temps_apprentissage", "s7_budget"] }
+            ];
+
+            sectionsMapping.forEach(sec => {
+                rawDataSummary += sec.title + "\n";
+                rawDataSummary += "-".repeat(40) + "\n";
+                sec.keys.forEach(key => {
+                    const label = key.replace(/s\d+_/,'').replace(/_/g,' ').toUpperCase();
+                    const val = data[key] ? (Array.isArray(data[key]) ? data[key].join(", ") : data[key]) : "Non renseigné";
+                    rawDataSummary += `• ${label} : ${val}\n`;
+                });
+                rawDataSummary += "\n";
+            });
+
+            rawDataSummary += "------------------------------------------\n";
+            rawDataSummary += `Généré le ${new Date().toLocaleString('fr-FR')} pour le restaurant MissMum.\n`;
+            rawDataSummary += "==========================================";
+
+            // Show Loading modal instantly
+            document.getElementById('modalLoadingState').style.display = 'flex';
+            document.getElementById('modalReportState').style.display = 'none';
+            document.getElementById('successModal').classList.add('active');
+
+            // Construct Gemini AI prompt
+            const hoursPerWeek = parseFloat(data.s2_heures_paperasse) || 0;
+            const estimatedHoursPerYear = hoursPerWeek * 52;
+            const equivalentWeeks = Math.round((estimatedHoursPerYear / 40) * 10) / 10;
+
+            const systemInstruction = `Tu es un consultant expert en stratégie digitale et en automatisation pour les restaurants de Belgique (Région de Mons). Ton rôle est d'émettre un audit chaleureux, rassurant et constructif pour 'Tonton', le gérant du restaurant africain MissMum. 
+
+Ton ton doit être direct, sans jargon, encourageant et chaleureux. 
+Règles strictes :
+- Ne jamais mentionner de balise HTML ou body englobante.
+- Génère uniquement du code HTML propre (contenant des paragraphes, badges, listes, ou span stylisés avec les classes CSS de Tailwind, adaptées à un fond sombre de conteneur).
+- Inclus impérativement un Score d'Efficacité Administrative (entre 10 et 90) estimé d'après son niveau de stress et son organisation.
+- Utilise les données fournies pour justifier tes conseils (par exemple les heures perdues par an).`;
+
+            const aiPrompt = `Voici les réponses du questionnaire d'audit de MissMum :
+- Ancienneté : ${data.s1_ouverture}
+- Équipe : ${data.s1_equipe} personnes
+- Tâche la plus difficile : "${data.s2_tache_plus_longue}"
+- Souhait d'élimination de corvée : "${data.s2_corvee_disparaitre}"
+- Heures par semaine passées sur l'administratif : ${data.s2_heures_paperasse}h (Soit environ ${estimatedHoursPerYear}h par an, l'équivalent de ${equivalentWeeks} semaines de travail à plein temps !)
+- Niveau de stress face à la paperasse : ${data.s2_stress_paperasse}/10
+- Canal comptable habituel : ${data.s4_comptable}
+- Mode de réception des factures : ${data.s4_fournisseurs}
+- Temps estimé de recherche de facture pour l'AFSCA : ${data.s5_temps_afsca} min
+- Rangement actuel des factures : ${data.s5_rangement}
+- Attente principale du numérique : "${data.s7_reve_numerique}"
+- Frein d'abandon principal : "${data.s7_frein_abandon}"
+- Budget mensuel max : ${data.s7_budget}
+
+Rédige un rapport percutant en français. Propose une solution unique de départ (le "Scénario A" : un scanner de factures intelligent via WhatsApp qui classe automatiquement vers Airtable sans effort, idéal pour sa comptabilité et la traçabilité AFSCA). Justifie pourquoi cette solution répond exactement à ses contraintes.`;
+
+            try {
+                const aiReportHTML = await fetchGeminiReport(aiPrompt, systemInstruction);
+                
+                if (aiReportHTML) {
+                    generatedAiReportText = aiReportHTML;
+                    document.getElementById('aiReportContent').innerHTML = aiReportHTML;
+                } else {
+                    document.getElementById('aiReportContent').innerHTML = `
+                        <div class="score-badge">Maturité Digitale estimée : 45/100</div>
+                        <h3><i data-lucide="alert-circle" class="w-4 h-4"></i> Analyse standard de MissMum</h3>
+                        <p class="text-xs text-gray-300">Tonton, ton restaurant a un grand potentiel. Tu perds actuellement <strong>${estimatedHoursPerYear} heures par an</strong> à cause de la paperasse administrative. La solution recommandée prioritaire est de mettre en place le scanner de factures automatique via WhatsApp afin de soulager ton quotidien.</p>
+                    `;
+                }
+
+                // Format final email/share text body with AI insights included
+                formattedDataBody = `==========================================\n`;
+                formattedDataBody += `📋 RAPPORT DE DIAGNOSTIC - RESTO MISS MUM\n`;
+                formattedDataBody += `==========================================\n\n`;
+                formattedDataBody += `🎯 ANALYSE ET RECOMMANDATIONS DE L'IA GEMINI :\n`;
+                formattedDataBody += `------------------------------------------\n`;
+                formattedDataBody += `${generatedAiReportText.replace(/<[^>]*>/g, '')}\n\n`;
+                formattedDataBody += `------------------------------------------\n`;
+                formattedDataBody += rawDataSummary;
+
+                // Configure Email Link
+                const subject = "[DIAGNOSTIC MissMum] Rapport d'Audit de Tonton";
+                const mailto = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(formattedDataBody);
+                document.getElementById('modalEmailBtn').href = mailto;
+
+                // Transition Modal State
+                document.getElementById('modalLoadingState').style.display = 'none';
+                document.getElementById('modalReportState').style.display = 'block';
+                lucide.createIcons();
+
+            } catch (err) {
+                console.error("Gemini API call failed, loading fallback...", err);
+                document.getElementById('aiReportContent').innerHTML = `
+                    <div class="score-badge">Maturité Digitale estimée : 40/100</div>
+                    <h3><i data-lucide="shield-alert" class="w-4 h-4"></i> Diagnostic MissMum (Mode Secours)</h3>
+                    <p class="text-xs text-gray-300">Tonton, d'après tes réponses, tu consacres environ <strong>${estimatedHoursPerYear} heures par an</strong> à la gestion administrative (surtout pour "${data.s2_tache_plus_longue}"). C'est l'équivalent de près de <strong>${equivalentWeeks} semaines de travail à plein temps perdues</strong> !<br><br><strong>Recommandation :</strong> Simplifions la traçabilité AFSCA et la compta grâce au scanner de factures automatique via WhatsApp.</p>
+                `;
+
+                formattedDataBody = rawDataSummary;
+                const subject = "[DIAGNOSTIC MissMum] Réponses à l'Audit Digital";
+                const mailto = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(formattedDataBody);
+                document.getElementById('modalEmailBtn').href = mailto;
+
+                document.getElementById('modalLoadingState').style.display = 'none';
+                document.getElementById('modalReportState').style.display = 'block';
+                lucide.createIcons();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Lancer le diagnostic IA de MissMum</span> <i data-lucide="sparkles" class="w-5 h-5"></i>';
+                lucide.createIcons();
+            }
+        });
+
+        // Copy outputs directly to Clipboard
+        function copyResultsToClipboard() {
+            if (!formattedDataBody) return;
+            
+            const tempTextarea = document.createElement("textarea");
+            tempTextarea.value = formattedDataBody;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("Copié ! Tu peux maintenant le coller sur WhatsApp.");
+                    
+                    const btnText = document.getElementById('copyBtnText');
+                    const btnIcon = document.getElementById('copyBtnIcon');
+                    
+                    btnText.textContent = "Copié avec succès !";
+                    btnIcon.setAttribute('data-lucide', 'check');
+                    lucide.createIcons();
+                    
+                    setTimeout(() => {
+                        btnText.textContent = "Copier pour m'envoyer sur WhatsApp";
+                        btnIcon.setAttribute('data-lucide', 'copy');
+                        lucide.createIcons();
+                    }, 4000);
+                }
+            } catch (err) {
+                console.error('Impossible de copier la sélection', err);
+                showToast("Désolé, impossible de copier automatiquement sur ton appareil.");
+            } finally {
+                document.body.removeChild(tempTextarea);
+            }
+        }
+
+        // Close success modal by clicking backdrop overlay easily
+        document.getElementById('successModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
